@@ -21,7 +21,7 @@ class AsyncConsole(object):
         (y,x) = self.screen.getmaxyx()
         # leave last lines from prompt
         self.output_window = self.screen.subwin(y-2,x,0,0)
-        self.prompt_window = self.screen.subwin(2,x,y-2,0)
+        self.prompt_window = self.screen.subwin(1,x,y-2,0)
         self.prompt_window.keypad(1)
         # let output_window scroll by itself when number of lines are more than window size
         self.output_window.scrollok(True)
@@ -39,14 +39,13 @@ class AsyncConsole(object):
 
 
     def resize(self):
-        #FIX: crashes when vertically size becomes lower that initial setting 
+        #FIX: leaving garbage behind
         (y,x)=self.screen.getmaxyx()
-        curses.resizeterm(y,x)
-        self.screen.refresh()
+        #curses.resizeterm(y,x)
         self.output_window.resize(y-2,x)
         # move the prompt window to the bottom of the output_window
         self.prompt_window.mvwin(y-2,0)
-        self.prompt_window.resize(2,x)
+        self.prompt_window.resize(1,x)
         self.output_window.refresh()
         self.prompt_window.refresh()
 
