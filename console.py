@@ -39,10 +39,9 @@ class AsyncConsole(object):
 
 
     def resize(self):
-        #FIX: crashes when vertically size becomes lower that initial setting 
+        #FIX: leaving garbage behind
         (y,x)=self.screen.getmaxyx()
-        curses.resizeterm(y,x)
-        self.screen.refresh()
+        #curses.resizeterm(y,x)
         self.output_window.resize(y-2,x)
         # move the prompt window to the bottom of the output_window
         self.prompt_window.mvwin(y-2,0)
