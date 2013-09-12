@@ -8,24 +8,32 @@ class AsyncConsole(object):
     prompt_window = None
     prompt_string = None
 
-    def __init__(self,prompt_string='> '):
+    def __init__(self,screen=None,prompt_string='> '):
+        self.screen = screen
+            
         self.prompt_string=prompt_string
         self._initialize()
         self.rebuild_prompt()
         
 
     def _initialize(self):
-        self.screen = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
+        if not self.screen:
+            # if wrapper has been used, we don't need this
+            self.screen = curses.initscr()
+            curses.noecho()
+            curses.cbreak()
+        
+        # get the current size of screen    
         (y,x) = self.screen.getmaxyx()
-        # leave last lines from prompt
+        
+        # leave last lines for prompt
         self.output_window = self.screen.subwin(y-2,x,0,0)
         self.prompt_window = self.screen.subwin(1,x,y-2,0)
-        self.prompt_window.keypad(1)
+        
         # let output_window scroll by itself when number of lines are more than window size
         self.output_window.scrollok(True)
         self.prompt_window.scrollok(True)
+        
         #TODO: set cursor position on prompt_window?
 
 
@@ -40,9 +48,12 @@ class AsyncConsole(object):
 
     def resize(self):
         #FIX: leaving garbage behind
+        
+        # get new size of screen
         (y,x)=self.screen.getmaxyx()
-        #curses.resizeterm(y,x)
+
         self.output_window.resize(y-2,x)
+        
         # move the prompt window to the bottom of the output_window
         self.prompt_window.mvwin(y-2,0)
         self.prompt_window.resize(1,x)
@@ -55,17 +66,21 @@ class AsyncConsole(object):
             try:
                 c = self.screen.getch()
                 c = chr(c)
-                #TODO: replace 10 with key enter/line feed?!
-                if ord(c) == 10:
+                #TODO: replace '\n' with key enter/line feed?!
+                if ord(c) == ord('\n'):
+                    if input_string == 'quit':
+                        break
+                    
                     self.prompt_window.clear()
                     self.output_window.addstr(input_string+'\n')
                     self.output_window.refresh()
                     self.rebuild_prompt()
                     input_string = ''
                     continue
-                #TODO: replace 27 with key escape
-                if ord(c) == 27:
-                    break
+                if ord(c) == curses.KEY_BACKSPACE:
+                    self.prompt_window.delch()
+                    continue
+
                 self.prompt_window.addstr(str(c))
                 input_string = input_string + c
                 self.prompt_window.refresh()
@@ -76,24 +91,17 @@ class AsyncConsole(object):
                     self.output_window.addstr(str(c)+"\n")
 
     def restore_screen(self):
+        # to be used if not using the wrapper module
         curses.nocbreak()
         curses.echo()
         curses.endwin()
 
-def restore_screen():
-    curses.nocbreak()
-    curses.echo()
-    curses.endwin()
 
-def main():
-    try:
-        console = AsyncConsole()
-        console.start()
-        restore_screen()
-    except:
-        restore_screen()    
-        traceback.print_exc()
+
+def main(stdscr):
+    console = AsyncConsole(stdscr)
+    console.start()
 
 
 if __name__ == '__main__':
-    main()
+    curses.wrapper(main)
