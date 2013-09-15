@@ -34,7 +34,6 @@ class AsyncConsole(object):
         self.output_window.scrollok(True)
         self.prompt_window.scrollok(True)
         
-        #TODO: set cursor position on prompt_window?
 
 
 
@@ -62,10 +61,12 @@ class AsyncConsole(object):
 
     def start(self):
         input_string = ''
+        
         while True:
             try:
-                c = self.screen.getch()
-                c = chr(c)
+                o = self.prompt_window.getch()
+                c = chr(o)
+                
                 #TODO: replace '\n' with key enter/line feed?!
                 if ord(c) == ord('\n'):
                     if input_string == 'quit':
@@ -77,8 +78,13 @@ class AsyncConsole(object):
                     self.rebuild_prompt()
                     input_string = ''
                     continue
-                if ord(c) == curses.KEY_BACKSPACE:
-                    self.prompt_window.delch()
+                if o == 127 or o == curses.KEY_BACKSPACE or o == curses.KEY_DC: # backspace
+                    (y,x) = self.prompt_window.getyx()
+                    if x > len(self.prompt_string):
+                        self.prompt_window.move(y,x-1)
+                        input_string = input_string[:-1]
+                        self.prompt_window.delch()
+                        self.prompt_window.refresh()
                     continue
 
                 self.prompt_window.addstr(str(c))
