@@ -7,10 +7,11 @@ class AsyncConsole(object):
     output_window = None
     prompt_window = None
     prompt_string = None
+    x = 0
+    y = 0
 
     def __init__(self,screen=None,prompt_string='> '):
-        self.screen = screen
-            
+        self.screen = screen            
         self.prompt_string=prompt_string
         self._initialize()
         self.rebuild_prompt()
@@ -58,39 +59,69 @@ class AsyncConsole(object):
         self.prompt_window.resize(1,x)
         self.output_window.refresh()
         self.prompt_window.refresh()
+    
+    def move_cursor_left(self):
+        min_x = 0
+        min_y = 0
+        if self.y == min_y:
+            min_x = len(self.prompt_string)
+        if self.x > min_x:
+            self.x = self.x-1
+        elif self.y > min_y:
+            self.y = self.y = self.y-1
+            (y,self.x) = self.prompt_window.getmaxyx()
+        else:
+            return False
+        self.prompt_window.move(self.y,self.x)
+        self.prompt_window.refresh()
+        return True
 
+    def move_cursor_right(self,max_x=0):
+        if self.x < max_x:
+            self.x = self.x+1
+            self.prompt_window.move(self.y,self.x)
+            self.prompt_window.refresh()
+            return True
+        return False
+            
+    def backspace(self):
+        if self.move_cursor_left():
+            self.prompt_window.delch()
+            self.input_string = self.input_string[:-1]
+        
     def start(self):
-        input_string = ''
+        self.input_string = ''
+        
+        # interpret keypad keys like arrows
+        self.prompt_window.keypad(1)
         
         while True:
+            c = self.prompt_window.getch()
+            (self.y,self.x) = self.prompt_window.getyx()
+            
             try:
-                o = self.prompt_window.getch()
-                c = chr(o)
+                c = chr(c)
+                o = ord(c)
                 
                 #TODO: replace '\n' with key enter/line feed?!
                 if ord(c) == ord('\n'):
-                    if input_string == 'quit':
-                        break
-                    
+                    if self.input_string == 'quit':
+                        break                  
                     self.prompt_window.clear()
-                    self.output_window.addstr(input_string+'\n')
+                    self.output_window.addstr(self.input_string+'\n')
                     self.output_window.refresh()
                     self.rebuild_prompt()
-                    input_string = ''
+                    self.input_string = ''
                     continue
+                
                 if o == 127 or o == curses.KEY_BACKSPACE or o == curses.KEY_DC: # backspace
-                    (y,x) = self.prompt_window.getyx()
-                    if x > len(self.prompt_string):
-                        self.prompt_window.move(y,x-1)
-                        input_string = input_string[:-1]
-                        self.prompt_window.delch()
-                        self.prompt_window.refresh()
+                    self.backspace()
                     continue
-
+                    
                 self.prompt_window.addstr(str(c))
-                input_string = input_string + c
+                self.input_string = self.input_string + c
                 self.prompt_window.refresh()
-            except ValueError:
+            except ValueError:   
                 if c == curses.KEY_RESIZE: # resize screen
                     self.resize()
                 else:
