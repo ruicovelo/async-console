@@ -1,4 +1,4 @@
-import curses,os,sys,traceback
+import curses
 
 
 class AsyncConsole(object):
@@ -122,6 +122,15 @@ class AsyncConsole(object):
                 else:
                     self.output_window.addstr(str(c)+"\n")
 
+
+    def addline(self,line):
+        '''
+        Add a string line to the output screen
+        '''
+        #TODO: make this thread safe?
+        self.output_window.addstr(line+'\n')
+        self.output_window.refresh()
+
     def restore_screen(self):
         # to be used if not using the wrapper module
         curses.nocbreak()
@@ -131,12 +140,12 @@ class AsyncConsole(object):
 
 
 def main(stdscr):
+    # demo code
     console = AsyncConsole(stdscr)
     while console.readline():
         if console.input_string == 'quit':
-            break                  
-        console.output_window.addstr(console.input_string+'\n')
-        console.output_window.refresh()
+            break
+        console.addline(console.input_string)                  
 
 
 
