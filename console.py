@@ -89,7 +89,7 @@ class AsyncConsole(object):
             self.prompt_window.delch()
             self.input_string = self.input_string[:-1]
         
-    def start(self):
+    def readline(self):
         self.input_string = ''
         
         # interpret keypad keys like arrows
@@ -105,14 +105,9 @@ class AsyncConsole(object):
                 
                 #TODO: replace '\n' with key enter/line feed?!
                 if ord(c) == ord('\n'):
-                    if self.input_string == 'quit':
-                        break                  
                     self.prompt_window.clear()
-                    self.output_window.addstr(self.input_string+'\n')
-                    self.output_window.refresh()
                     self.rebuild_prompt()
-                    self.input_string = ''
-                    continue
+                    return True
                 
                 if o == 127 or o == curses.KEY_BACKSPACE or o == curses.KEY_DC: # backspace
                     self.backspace()
@@ -137,7 +132,12 @@ class AsyncConsole(object):
 
 def main(stdscr):
     console = AsyncConsole(stdscr)
-    console.start()
+    while console.readline():
+        if console.input_string == 'quit':
+            break                  
+        console.output_window.addstr(console.input_string+'\n')
+        console.output_window.refresh()
+
 
 
 if __name__ == '__main__':
