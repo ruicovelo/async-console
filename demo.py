@@ -9,7 +9,7 @@ the current time while the user can still type in the input prompt.
 import curses
 import threading
 import time
-from console import AsyncConsole
+from asyncconsole import AsyncConsole
 
 class MyThread(threading.Thread):
     stop = False
