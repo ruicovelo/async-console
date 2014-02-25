@@ -36,7 +36,7 @@ class AsyncConsole(object):
         
         # let output_window scroll by itself when number of lines are more than window size
         self.output_window.scrollok(True)
-        self.prompt_window.scrollok(True)
+        self.prompt_window.scrollok(True) #FIX: not working with textpad.Textbox
         
 
 
@@ -63,37 +63,8 @@ class AsyncConsole(object):
         self.output_window.refresh()
         self.prompt_window.refresh()
     
-    def move_cursor_left(self):
-        min_x = 0
-        min_y = 0
-        return True
-        if self.y == min_y:
-            min_x = len(self.prompt_string)
-        if self.x > min_x:
-            self.x = self.x-1
-        elif self.y > min_y:
-            self.y = self.y = self.y-1
-            (y,self.x) = self.prompt_window.getmaxyx()
-        else:
-            return False
-        self.prompt_window.move(self.y,self.x)
-        self.prompt_window.refresh()
-        return True
-
-    def move_cursor_right(self,max_x=0):
-        if self.x < max_x:
-            self.x = self.x+1
-            self.prompt_window.move(self.y,self.x)
-            self.prompt_window.refresh()
-            return True
-        return False
-            
-    def backspace(self):
-        if self.move_cursor_left():
-            self.prompt_window.delch()
-            self.input_string = self.input_string[:-1]
-
     def _validate_input(self,key):
+        #TODO: handle up and down arrows
         # terminate editing when pression enter key
         if key == ord('\n'):
             return curses.ascii.BEL # this is equivalent to CONTROL+G - terminate editing and return content
@@ -102,16 +73,20 @@ class AsyncConsole(object):
             (y,x) = self.prompt_window.getyx()
             if x == minx:
                 return None
-        #self.output_window.addstr("x: %s  y: %s \n" % (x,y))
-        #self.output_window.refresh()
         return key
         
-    def readline(self):
-        self.input_string = ''
+    def readline(self,handle_interrupt=True):
         
         # interpret keypad keys like arrows
         self.prompt_window.keypad(1)
-        self.input_string = self.edit.edit(self._validate_input)[len(self.prompt_string):]
+        try:
+            self.input_string = self.edit.edit(self._validate_input)[len(self.prompt_string):]
+        except KeyboardInterrupt:
+            #TODO: I still don't know if I want to handle this here or not
+            if handle_interrupt:
+                return False
+            else:
+                raise KeyboardInterrupt
         self.rebuild_prompt()
         return True
 
