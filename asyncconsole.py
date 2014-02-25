@@ -4,20 +4,14 @@ from curses import textpad
 
 class AsyncConsole(object):
 
-    screen = None
-    output_window = None
-    prompt_window = None
-    prompt_string = None
-    x = 0
-    y = 0
-
     def __init__(self,screen=None,prompt_string='> '):
         self.screen = screen            
+        self.output_window = None
+        self.prompt_window = None
         self.prompt_string=prompt_string
         self._initialize()
         self.rebuild_prompt()
         
-
     def _initialize(self):
         if not self.screen:
             # if wrapper has been used, we don't need this
@@ -37,9 +31,6 @@ class AsyncConsole(object):
         # let output_window scroll by itself when number of lines are more than window size
         self.output_window.scrollok(True)
         self.prompt_window.scrollok(True) #FIX: not working with textpad.Textbox
-        
-
-
 
     def rebuild_prompt(self,default_text=None):
         self.prompt_window.clear()
@@ -47,7 +38,6 @@ class AsyncConsole(object):
         if default_text:
             self.prompt_window.addstr(default_text)
         self.prompt_window.refresh()
-
 
     def resize(self):
         #FIX: leaving garbage behind
