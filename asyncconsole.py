@@ -55,9 +55,13 @@ class AsyncConsole(object):
     
     def _validate_input(self,key):
         #TODO: handle up and down arrows
+
         # terminate editing when pression enter key
         if key == ord('\n'):
             return curses.ascii.BEL # this is equivalent to CONTROL+G - terminate editing and return content
+        
+        if key == 127: # workaround for mac os
+            key = curses.KEY_BACKSPACE
         if key in (curses.ascii.STX,curses.KEY_LEFT, curses.ascii.BS,curses.KEY_BACKSPACE):
             minx = len(self.prompt_string)
             (y,x) = self.prompt_window.getyx()
@@ -70,7 +74,8 @@ class AsyncConsole(object):
         # interpret keypad keys like arrows
         self.prompt_window.keypad(1)
         try:
-            self.input_string = self.edit.edit(self._validate_input)[len(self.prompt_string):]
+            self.input_string = self.edit.edit(self._validate_input)
+            self.input_string = self.input_string[len(self.prompt_string):len(self.input_string)-1]
         except KeyboardInterrupt:
             #TODO: I still don't know if I want to handle this here or not
             if handle_interrupt:
